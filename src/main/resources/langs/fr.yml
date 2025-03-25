@@ -1,0 +1,7 @@
+command:
+  faction:
+    plugin:
+      loaded: "Plugin has been loaded successfully!"
+    create:
+      success: "La faction {faction} a bien été créer !"
+      error: "Faction with this name already exists!"

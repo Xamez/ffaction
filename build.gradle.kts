@@ -4,7 +4,7 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
-group = "fr.xamez.FFaction"
+group = "fr.xamez.ffaction.FFaction"
 version = project.properties["version"] as String
 
 repositories {
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }
 
-val targetJavaVersion = 21
+val targetJavaVersion = 23
 kotlin {
     jvmToolchain(targetJavaVersion)
 }
@@ -32,7 +32,9 @@ tasks.build {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to version)
+    val props = mapOf(
+        "version" to version
+    )
     inputs.properties(props)
     filteringCharset = "UTF-8"
     filesMatching("plugin.yml") {
@@ -41,20 +43,8 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+    dependsOn("processResources")
     archiveClassifier.set("")
-    doLast {
-        val foliaPluginsDir = layout.buildDirectory.dir("../run/plugins").get().asFile
-        foliaPluginsDir.mkdirs()
-        copy {
-            from(archiveFile)
-            into(foliaPluginsDir)
-        }
-    }
-}
-
-tasks.shadowJar {
-    archiveClassifier.set("")
-
     doLast {
         val foliaPluginsDir = layout.buildDirectory.dir("../run/plugins").get().asFile
         foliaPluginsDir.mkdirs()
