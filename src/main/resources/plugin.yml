@@ -1,6 +1,6 @@
 name: FFaction
-version: '1.0-SNAPSHOT'
-main: fr.xamez.FFaction
+main: 'fr.xamez.ffaction.FFaction'
+version: '${version}'
 api-version: '1.21'
 author: Xamez
 description: Faction plugin for Folia
