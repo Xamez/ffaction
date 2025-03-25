@@ -1,0 +1,6 @@
+.idea
+.kotlin
+.gradle
+build
+run/logs
+run/plugins/.paper-remapped
