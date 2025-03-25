@@ -52,11 +52,8 @@ tasks.shadowJar {
     }
 }
 
-tasks.register<Jar>("devJar") {
-    group = "run"
-    dependsOn("classes")
-    archiveClassifier.set("dev")
-    from(sourceSets.main.get().output)
+tasks.shadowJar {
+    archiveClassifier.set("")
 
     doLast {
         val foliaPluginsDir = layout.buildDirectory.dir("../run/plugins").get().asFile
@@ -68,31 +65,8 @@ tasks.register<Jar>("devJar") {
     }
 }
 
-tasks.named("runServer") {
-    dependsOn("devJar")
-}
-
-tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
-    javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
-    }
-    jvmArgs(
-        "-XX:+AllowEnhancedClassRedefinition",
-        "-XX:HotswapAgent=fatjar",
-    )
-}
-
 tasks.runServer {
     minecraftVersion("1.21.4")
 }
 
 runPaper.folia.registerTask()
-
-tasks.named("cleanFoliaCache") {
-    group = "run"
-}
-
-tasks.named("runFolia") {
-    group = "run"
-    dependsOn("devJar")
-}
