@@ -5,9 +5,10 @@ import org.bukkit.plugin.Plugin
 import java.io.File
 import java.io.InputStreamReader
 
-class ConfigManager(private val plugin: Plugin) {
+class ConfigManager(private val plugin: Plugin) : Reloadable {
 
-    private val configFile = File(plugin.dataFolder, "config.yml")
+    private val configurationFilename = "config.yml"
+    private val configFile = File(plugin.dataFolder, configurationFilename)
     private lateinit var config: YamlConfiguration
     private lateinit var defaultConfig: YamlConfiguration
 
@@ -17,17 +18,49 @@ class ConfigManager(private val plugin: Plugin) {
 
     private fun loadConfig() {
         val defaultStream =
-            plugin.getResource("config.yml") ?: throw IllegalStateException("Missing default config.yml in JAR!")
+            plugin.getResource(configurationFilename) ?: throw IllegalStateException("Missing default $configurationFilename in JAR!")
         defaultConfig = YamlConfiguration.loadConfiguration(InputStreamReader(defaultStream))
 
         if (!configFile.exists()) {
-            plugin.saveResource("config.yml", false)
+            plugin.saveResource(configurationFilename, false)
+            plugin.logger.info("Created config file: $configurationFilename")
+        } else {
+            updateConfigFile()
         }
 
         config = YamlConfiguration.loadConfiguration(configFile)
     }
 
-    fun reload() = loadConfig()
+    private fun updateConfigFile() {
+        try {
+            val existingConfig = YamlConfiguration.loadConfiguration(configFile)
+            var updated = false
+
+            for (key in defaultConfig.getKeys(true)) {
+                if (!existingConfig.contains(key)) {
+                    existingConfig.set(key, defaultConfig.get(key))
+                    updated = true
+                }
+            }
+
+            if (updated) {
+                existingConfig.save(configFile)
+                plugin.logger.info("Updated $configurationFilename with new keys")
+            }
+        } catch (e: Exception) {
+            plugin.logger.warning("Failed to update $configurationFilename: ${e.message}")
+        }
+    }
+
+    override fun reload(): Boolean {
+        try {
+            loadConfig()
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
 
     fun getString(path: String): String? = config.getString(path) ?: defaultConfig.getString(path)
     fun getInt(path: String): Int = config.getInt(path, defaultConfig.getInt(path))

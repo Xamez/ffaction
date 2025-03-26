@@ -45,9 +45,13 @@ tasks.processResources {
 tasks.shadowJar {
     dependsOn("processResources")
     archiveClassifier.set("")
+
+    outputs.upToDateWhen { false }
+
     doLast {
         val foliaPluginsDir = layout.buildDirectory.dir("../run/plugins").get().asFile
         foliaPluginsDir.mkdirs()
+        println("Copying ${archiveFile.get().asFile.path} to ${foliaPluginsDir.path}")
         copy {
             from(archiveFile)
             into(foliaPluginsDir)

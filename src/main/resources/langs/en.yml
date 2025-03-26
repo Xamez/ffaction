@@ -2,6 +2,9 @@ command:
   faction:
     plugin:
       loaded: "Plugin has been loaded successfully!"
+    reload:
+      success: "Plugin has been reloaded successfully!"
+      error: "Plugin has failed to reload! See console for more information."
     create:
       success: "Faction {faction} has been created successfully!"
       error: "Faction with this name already exists!"

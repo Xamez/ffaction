@@ -3,13 +3,16 @@ package fr.xamez.ffaction.command.base
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
+import fr.xamez.ffaction.config.ConfigManager
 import fr.xamez.ffaction.localization.LanguageManager
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 
 class FactionCommand(
-    private val languageManager: LanguageManager, private val commands: List<ICommand>
+    private val configManager: ConfigManager,
+    private val languageManager: LanguageManager,
+    private val commands: List<ICommand>
 ) : ICommand {
 
     override val name: String = "faction"
