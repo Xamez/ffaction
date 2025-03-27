@@ -1,4 +1,24 @@
 language: "en"
 
-faction:
-  test: "test"
+# Storage configuration
+storage:
+  # Available types: MYSQL, SQLITE, YAML
+  type: "YAML"
+
+  # MySQL configuration
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "ffaction"
+    username: "root"
+    password: ""
+    tablePrefix: "ffaction_"
+
+  # SQLite configuration
+  sqlite:
+    filename: "ffaction/data"
+    tablePrefix: "ffaction_"
+
+  # YAML configuration
+  yaml:
+    filename: "ffaction/data.yml"

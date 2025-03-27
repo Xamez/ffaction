@@ -20,6 +20,9 @@ repositories {
 dependencies {
     compileOnly("dev.folia:folia-api:1.21.4-R0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("com.mysql:mysql-connector-j:9.2.0")
+    implementation("org.xerial:sqlite-jdbc:3.42.0.0")
 }
 
 val targetJavaVersion = 23

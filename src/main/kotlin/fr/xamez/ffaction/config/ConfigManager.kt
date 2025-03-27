@@ -2,6 +2,7 @@ package fr.xamez.ffaction.config
 
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.plugin.Plugin
+import org.jetbrains.annotations.NotNull
 import java.io.File
 import java.io.InputStreamReader
 
@@ -62,9 +63,13 @@ class ConfigManager(private val plugin: Plugin) : Reloadable {
         }
     }
 
-    fun getString(path: String): String? = config.getString(path) ?: defaultConfig.getString(path)
+    fun getString(path: String): String? = config.getString(path, defaultConfig.getString(path))
+    fun getString(path: String, @NotNull defaultValue: String): String = config.getString(path, defaultValue)!!
+
     fun getInt(path: String): Int = config.getInt(path, defaultConfig.getInt(path))
+    fun getInt(path: String, @NotNull defaultValue: Int): Int = config.getInt(path, defaultValue)
+
     fun getBoolean(path: String): Boolean = config.getBoolean(path, defaultConfig.getBoolean(path))
-    fun getStringList(path: String): List<String> =
-        config.getStringList(path).ifEmpty { defaultConfig.getStringList(path) }
+    fun getBoolean(path: String, @NotNull defaultValue: Boolean): Boolean = config.getBoolean(path, defaultValue)
+
 }
