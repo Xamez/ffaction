@@ -30,6 +30,8 @@ class FFactionAPIImpl(
 
     override fun getPlayerByName(name: String): FPlayer? = factionService.getPlayerByName(name)
 
+    override fun savePlayer(player: FPlayer): Boolean = factionService.savePlayer(player)
+
     override fun getPlayerFaction(player: FPlayer): Faction? = factionService.getPlayerFaction(player)
 
     override fun getPlayerFaction(player: Player): Faction? {
@@ -62,58 +64,68 @@ class FFactionAPIImpl(
     override fun disbandFaction(faction: Faction): Boolean = factionService.disbandFaction(faction)
 
     override fun setFactionHome(faction: Faction, location: Location): Boolean {
-        return factionService.setHome(faction, location)
+        return factionService.setFactionHome(faction, location)
+    }
+
+    override fun setFactionDescription(faction: Faction, description: String): Boolean {
+        return factionService.setFactionDescription(faction, description)
+    }
+
+    override fun setFactionOpenStatus(faction: Faction, isOpen: Boolean): Boolean {
+        return factionService.setFactionOpenStatus(faction, isOpen)
+    }
+
+    override fun setFactionName(faction: Faction, name: String): Boolean {
+        return factionService.setFactionName(faction, name)
+    }
+
+    override fun setFactionLeader(faction: Faction, player: FPlayer): Boolean {
+        return factionService.setFactionLeader(faction, player)
     }
 
     override fun getFactionAt(location: Location): Faction? {
-        if (location.world == null) return null
-
-        val fLocation = FLocation(
-            world = location.world!!.name,
-            chunkX = location.blockX shr 4,
-            chunkZ = location.blockZ shr 4
-        )
+        val fLocation = FLocation(location.world.name, location.blockX, location.blockZ)
         return getFactionAt(fLocation)
     }
 
     override fun getFactionAt(chunk: Chunk): Faction? {
-        val fLocation = FLocation(
-            world = chunk.world.name,
-            chunkX = chunk.x,
-            chunkZ = chunk.z
-        )
+        val fLocation = FLocation(chunk.world.name, chunk.x, chunk.z)
         return getFactionAt(fLocation)
     }
 
     override fun getFactionAt(fLocation: FLocation): Faction? {
-        val provider = storageManager.getProvider() ?: return null
-        return provider.getFactionRepository().getFactionAt(fLocation)
+        return factionService.getFactionAt(fLocation)
     }
 
     override fun claimLand(faction: Faction, chunk: Chunk): Boolean {
-        val fLocation = FLocation(
-            world = chunk.world.name,
-            chunkX = chunk.x,
-            chunkZ = chunk.z
-        )
+        val fLocation = FLocation(chunk.world.name, chunk.x, chunk.z)
+        return claimLand(faction, fLocation)
+    }
+
+    override fun claimLand(faction: Faction, fLocation: FLocation): Boolean {
         return factionService.claimLand(faction, fLocation)
     }
 
     override fun unclaimLand(chunk: Chunk): Boolean {
-        val fLocation = FLocation(
-            world = chunk.world.name,
-            chunkX = chunk.x,
-            chunkZ = chunk.z
-        )
+        val fLocation = FLocation(chunk.world.name, chunk.x, chunk.z)
         return factionService.unclaimLand(fLocation)
     }
 
+    override fun unclaimLand(fLocation: FLocation): Boolean {
+        return factionService.unclaimLand(fLocation)
+    }
+
+    override fun getClaimsFor(faction: Faction): Set<FLocation> {
+        val provider = storageManager.getProvider() ?: return emptySet()
+        return provider.getFactionRepository().getClaimsFor(faction.id)
+    }
+
     override fun setRelation(faction: Faction, otherFaction: Faction, relation: FactionRelation): Boolean {
-        return factionService.setRelation(faction, otherFaction.id, relation)
+        return factionService.setRelation(faction, otherFaction, relation)
     }
 
     override fun getRelation(faction: Faction, otherFaction: Faction): FactionRelation {
-        return factionService.getRelation(faction, otherFaction.id)
+        return factionService.getRelation(faction, otherFaction)
     }
 
     override fun getFactionsPlayers(faction: Faction): List<FPlayer> {
@@ -127,4 +139,5 @@ class FFactionAPIImpl(
     override fun setPlayerFaction(player: FPlayer, faction: Faction?): Boolean {
         return factionService.setPlayerFaction(player, faction)
     }
+
 }

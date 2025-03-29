@@ -1,114 +1,179 @@
-package fr.xamez.ffaction.storage.impl.sql
+﻿package fr.xamez.ffaction.storage.impl.sql
 
 import com.zaxxer.hikari.HikariDataSource
 import fr.xamez.ffaction.api.model.FPlayer
 import fr.xamez.ffaction.api.model.FactionRole
 import fr.xamez.ffaction.api.repository.FPlayerRepository
-import java.sql.ResultSet
+import fr.xamez.ffaction.storage.impl.AbstractRepository
 import java.util.*
 import java.util.logging.Logger
 
 class SQLFPlayerRepository(
     logger: Logger,
-    dataSource: HikariDataSource
-) : AbstractSQLRepository(logger, dataSource), FPlayerRepository {
+    private val dataSource: HikariDataSource,
+    useCache: Boolean = true
+) : AbstractRepository<FPlayer, UUID>(logger, useCache), FPlayerRepository {
 
     init {
         initTables()
     }
 
-    override fun getPlayer(uuid: UUID): FPlayer? {
+    override fun fetchById(id: UUID): FPlayer? {
         return withConnection { executor ->
             executor.query(
                 "SELECT * FROM players WHERE uuid = ?",
-                { extractPlayer(it) },
-                uuid.toString()
+                { rs ->
+                    if (rs.next()) {
+                        extractPlayer(rs)
+                    } else null
+                },
+                id.toString()
             )
         }
     }
 
-    override fun getPlayerByName(name: String): FPlayer? {
-        return withConnection { executor ->
-            executor.query(
-                "SELECT * FROM players WHERE LOWER(name) = LOWER(?)",
-                { extractPlayer(it) },
-                name
-            )
-        }
-    }
-
-    override fun getAllPlayers(): List<FPlayer> {
+    override fun fetchAll(): List<FPlayer> {
         return withConnection { executor ->
             executor.queryList(
                 "SELECT * FROM players",
-                { extractPlayer(it) }
+                { rs -> extractPlayer(rs) }
             )
         }
     }
 
-    override fun savePlayer(player: FPlayer): Boolean {
+    override fun persist(entity: FPlayer): Boolean {
         return withConnection { executor ->
-            val exists = getPlayer(player.uuid) != null
+            val exists = executor.query(
+                "SELECT 1 FROM players WHERE uuid = ?",
+                { rs -> rs.next() },
+                entity.uuid.toString()
+            )
 
-            if (exists) {
+            if (exists == true) {
                 executor.update(
                     """
-                    UPDATE players
-                    SET name = ?, faction_id = ?, role = ?, power = ?, max_power = ?
+                    UPDATE players SET 
+                        name = ?, 
+                        faction_id = ?, 
+                        role = ?, 
+                        power = ?,
+                        max_power = ?
                     WHERE uuid = ?
                     """,
-                    player.name,
-                    player.factionId,
-                    player.role.name,
-                    player.power,
-                    player.maxPower,
-                    player.uuid.toString()
+                    entity.name,
+                    entity.factionId,
+                    entity.role.name,
+                    entity.power,
+                    entity.maxPower,
+                    entity.uuid.toString()
                 ) > 0
             } else {
                 executor.update(
                     """
-                    INSERT INTO players (uuid, name, faction_id, role, power, max_power)
+                    INSERT INTO players (uuid, name, faction_id, role, power, max_power) 
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                    player.uuid.toString(),
-                    player.name,
-                    player.factionId,
-                    player.role.name,
-                    player.power,
-                    player.maxPower
+                    entity.uuid.toString(),
+                    entity.name,
+                    entity.factionId,
+                    entity.role.name,
+                    entity.power,
+                    entity.maxPower
                 ) > 0
             }
         }
     }
 
-    override fun deletePlayer(uuid: UUID): Boolean {
+    override fun removeById(id: UUID): Boolean {
         return withConnection { executor ->
-            executor.update(
-                "DELETE FROM players WHERE uuid = ?",
-                uuid.toString()
-            ) > 0
+            executor.update("DELETE FROM players WHERE uuid = ?", id.toString()) > 0
         }
     }
 
-    override fun getPlayersInFaction(factionId: String): List<FPlayer> {
-        return withConnection { executor ->
-            executor.queryList(
-                "SELECT * FROM players WHERE faction_id = ?",
-                { extractPlayer(it) },
-                factionId
+    override fun getEntityId(entity: FPlayer): UUID = entity.uuid
+
+    override fun executeQuery(queryType: String, params: Map<String, Any?>): Any? {
+        return when (queryType) {
+            "findByName" -> {
+                val name = params["name"] as? String ?: return null
+                withConnection { executor ->
+                    executor.query(
+                        "SELECT * FROM players WHERE name = ?",
+                        { rs ->
+                            if (rs.next()) extractPlayer(rs) else null
+                        },
+                        name
+                    )
+                }
+            }
+            "findByFaction" -> {
+                val factionId = params["factionId"] as? String ?: return null
+                withConnection { executor ->
+                    executor.queryList(
+                        "SELECT * FROM players WHERE faction_id = ?",
+                        { rs -> extractPlayer(rs) },
+                        factionId
+                    )
+                }
+            }
+            else -> null
+        }
+    }
+
+    override fun findByName(name: String): FPlayer? {
+        return query("findByName", mapOf("name" to name)) { it as? FPlayer }
+    }
+
+    override fun findByFaction(factionId: String): List<FPlayer> {
+        return query("findByFaction", mapOf("factionId" to factionId)) { it as? List<FPlayer> } ?: emptyList()
+    }
+
+    private fun extractPlayer(rs: java.sql.ResultSet): FPlayer {
+        val uuid = UUID.fromString(rs.getString("uuid"))
+        val name = rs.getString("name")
+        val factionId = rs.getString("faction_id")
+        val roleStr = rs.getString("role")
+        val role = try {
+            FactionRole.valueOf(roleStr)
+        } catch (e: Exception) {
+            logger.warning("Invalid faction role: $roleStr for player $name")
+            FactionRole.MEMBER
+        }
+        val power = rs.getDouble("power")
+        val maxPower = rs.getDouble("max_power")
+
+        return FPlayer(
+            uuid = uuid,
+            name = name,
+            factionId = factionId,
+            role = role,
+            power = power,
+            maxPower = maxPower
+        )
+    }
+
+    private fun initTables() {
+        withConnection { executor ->
+            executor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS players (
+                    uuid VARCHAR(36) PRIMARY KEY,
+                    name VARCHAR(16) NOT NULL,
+                    faction_id VARCHAR(50),
+                    role VARCHAR(20) NOT NULL,
+                    power DOUBLE NOT NULL DEFAULT 10.0,
+                    max_power DOUBLE NOT NULL DEFAULT 20.0,
+                    FOREIGN KEY (faction_id) REFERENCES factions(id) ON DELETE SET NULL
+                )
+                """
             )
         }
     }
 
-    private fun extractPlayer(rs: ResultSet): FPlayer {
-        return FPlayer(
-            uuid = UUID.fromString(rs.getString("uuid")),
-            name = rs.getString("name"),
-            factionId = rs.getString("faction_id"),
-            role = FactionRole.valueOf(rs.getString("role")),
-            power = rs.getDouble("power"),
-            maxPower = rs.getDouble("max_power")
-        )
+    private fun <T> withConnection(action: (SQLExecutor) -> T): T {
+        dataSource.connection.use { connection ->
+            val executor = SQLExecutor(logger, connection)
+            return action(executor)
+        }
     }
-
 }

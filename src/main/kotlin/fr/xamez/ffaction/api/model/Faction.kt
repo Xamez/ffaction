@@ -7,7 +7,7 @@ data class Faction(
     val id: String,
     val name: String,
     val description: String,
-    val leaderId: UUID = UUID(0, 0), // Default UUID
+    val leaderId: UUID = UUID(0, 0),
     val home: Location? = null,
     val isOpen: Boolean = false,
     val power: Double = 0.0,

@@ -38,13 +38,11 @@ class FPlayerCache {
         val oldPlayer = playersByUuid[player.uuid]
 
         if (oldPlayer != null) {
-            // Update name mapping if needed
             if (oldPlayer.name != player.name) {
                 playersByName.remove(oldPlayer.name.lowercase())
                 playersByName[player.name.lowercase()] = player.uuid
             }
 
-            // Update faction mapping if needed
             if (oldPlayer.factionId != player.factionId) {
                 oldPlayer.factionId?.let { oldFactionId ->
                     playersByFaction[oldFactionId]?.remove(player.uuid)

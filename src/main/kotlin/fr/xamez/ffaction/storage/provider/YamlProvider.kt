@@ -30,8 +30,8 @@ class YamlProvider(
             }
 
             config = YamlConfiguration.loadConfiguration(file)
-            factionRepository = YamlFactionRepository(plugin.logger, config);
-            fPlayerRepository = YamlFPlayerRepository(plugin.logger, config);
+            factionRepository = YamlFactionRepository(plugin.logger, config, file);
+            fPlayerRepository = YamlFPlayerRepository(plugin.logger, config, file);
             plugin.logger.info("Successfully initialized YAML storage")
             true
         } catch (e: Exception) {

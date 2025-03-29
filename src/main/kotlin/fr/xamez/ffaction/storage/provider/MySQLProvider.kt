@@ -6,8 +6,6 @@ import fr.xamez.ffaction.api.repository.FPlayerRepository
 import fr.xamez.ffaction.api.repository.FactionRepository
 import fr.xamez.ffaction.storage.DatabaseCredentials
 import fr.xamez.ffaction.storage.StorageProvider
-import fr.xamez.ffaction.storage.impl.sql.CachedSQLFPlayerRepository
-import fr.xamez.ffaction.storage.impl.sql.CachedSQLFactionRepository
 import fr.xamez.ffaction.storage.impl.sql.SQLFPlayerRepository
 import fr.xamez.ffaction.storage.impl.sql.SQLFactionRepository
 import org.bukkit.plugin.Plugin
@@ -38,8 +36,8 @@ class MySQLProvider(
 
             dataSource = HikariDataSource(config)
 
-            factionRepository = CachedSQLFactionRepository(SQLFactionRepository(plugin.logger, dataSource))
-            fPlayerRepository = CachedSQLFPlayerRepository(SQLFPlayerRepository(plugin.logger, dataSource))
+            factionRepository = SQLFactionRepository(plugin.logger, dataSource)
+            fPlayerRepository = SQLFPlayerRepository(plugin.logger, dataSource)
 
             plugin.logger.info("Successfully connected to MySQL database")
             true

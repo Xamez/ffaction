@@ -3,7 +3,9 @@ package fr.xamez.ffaction.api.service
 import fr.xamez.ffaction.api.model.*
 import fr.xamez.ffaction.api.repository.FPlayerRepository
 import fr.xamez.ffaction.api.repository.FactionRepository
+import org.bukkit.Chunk
 import org.bukkit.Location
+import org.bukkit.entity.Player
 import java.util.*
 
 class FactionService(
@@ -11,16 +13,20 @@ class FactionService(
     private val fPlayerRepository: FPlayerRepository
 ) {
 
-    // TODO: FIX ERRORS
+    fun getPlayer(uuid: UUID): FPlayer? = fPlayerRepository.findById(uuid)
 
-    fun getPlayer(uuid: UUID): FPlayer? = fPlayerRepository.getPlayer(uuid)
+    fun getPlayer(player: Player): FPlayer? = getPlayer(player.uniqueId)
 
-    fun getPlayerByName(name: String): FPlayer? = fPlayerRepository.getPlayerByName(name)
+    fun getPlayerByName(name: String): FPlayer? = fPlayerRepository.findByName(name)
 
-    fun savePlayer(player: FPlayer): Boolean = fPlayerRepository.savePlayer(player)
+    fun savePlayer(player: FPlayer): Boolean = fPlayerRepository.save(player)
 
     fun getPlayerFaction(player: FPlayer): Faction? {
-        return player.factionId?.let { factionRepository.getFaction(it) }
+        return player.factionId?.let { factionRepository.findById(it) }
+    }
+
+    fun getPlayerFaction(player: Player): Faction? {
+        return getPlayer(player)?.let { getPlayerFaction(it) }
     }
 
     fun setPlayerFaction(player: FPlayer, faction: Faction?): Boolean {
@@ -28,18 +34,18 @@ class FactionService(
             factionId = faction?.id,
             role = if (faction == null) FactionRole.MEMBER else player.role
         )
-        return fPlayerRepository.savePlayer(updatedPlayer)
+        return fPlayerRepository.save(updatedPlayer)
     }
 
     fun setPlayerRole(player: FPlayer, role: FactionRole): Boolean {
-        return fPlayerRepository.savePlayer(player.copy(role = role))
+        return fPlayerRepository.save(player.copy(role = role))
     }
 
-    fun getFaction(id: String): Faction? = factionRepository.getFaction(id)
+    fun getFaction(id: String): Faction? = factionRepository.findById(id)
 
-    fun getFactionByName(name: String): Faction? = factionRepository.getFactionByName(name)
+    fun getFactionByName(name: String): Faction? = factionRepository.findByName(name)
 
-    fun getAllFactions(): List<Faction> = factionRepository.getAllFactions()
+    fun getAllFactions(): List<Faction> = factionRepository.findAll()
 
     fun createFaction(name: String, player: FPlayer): Faction? {
         if (getFactionByName(name) != null) {
@@ -51,10 +57,17 @@ class FactionService(
         val faction = Faction(
             id = id,
             name = name,
-            leaderId = player.uuid
+            description = "",
+            leaderId = player.uuid,
+            home = null,
+            isOpen = false,
+            power = 0.0,
+            maxPower = 10.0,
+            claims = emptySet(),
+            relations = emptyMap()
         )
 
-        if (!factionRepository.saveFaction(faction)) {
+        if (!factionRepository.save(faction)) {
             return null
         }
 
@@ -63,12 +76,17 @@ class FactionService(
             role = FactionRole.LEADER
         )
 
-        if (!fPlayerRepository.savePlayer(updatedPlayer)) {
-            factionRepository.deleteFaction(id)
+        if (!fPlayerRepository.save(updatedPlayer)) {
+            factionRepository.delete(id)
             return null
         }
 
         return faction
+    }
+
+    fun createFaction(name: String, player: Player): Faction? {
+        val fPlayer = getPlayer(player) ?: return null
+        return createFaction(name, fPlayer)
     }
 
     fun disbandFaction(faction: Faction): Boolean {
@@ -78,50 +96,99 @@ class FactionService(
                 factionId = null,
                 role = FactionRole.MEMBER
             )
-            fPlayerRepository.savePlayer(updatedMember)
+            fPlayerRepository.save(updatedMember)
         }
 
-        return factionRepository.deleteFaction(faction.id)
+        return factionRepository.delete(faction.id)
     }
 
-    fun setRelation(faction: Faction, otherFactionId: String, relation: FactionRelation): Boolean {
-        val relations = faction.relations.toMutableMap()
-        relations[otherFactionId] = relation
-
-        val updatedFaction = faction.copy(relations = relations)
-        return factionRepository.saveFaction(updatedFaction)
+    fun setRelation(faction: Faction, otherFaction: Faction, relation: FactionRelation): Boolean {
+        return factionRepository.setRelation(faction.id, otherFaction.id, relation)
     }
 
-    fun getRelation(faction: Faction, otherFactionId: String): FactionRelation {
-        return faction.relations[otherFactionId] ?: FactionRelation.NEUTRAL
+    fun getRelation(faction: Faction, otherFaction: Faction): FactionRelation {
+        return factionRepository.getRelation(faction.id, otherFaction.id) ?: FactionRelation.NEUTRAL
     }
 
-    fun claimLand(faction: Faction, location: FLocation): Boolean {
-        val existingFaction = factionRepository.getFactionAt(location)
+    fun getFactionAt(location: Location): Faction? {
+        val fLocation = FLocation(location.world.name, location.blockX, location.blockZ)
+        return getFactionAt(fLocation)
+    }
+
+    fun getFactionAt(chunk: Chunk): Faction? {
+        val fLocation = FLocation(chunk.world.name, chunk.x, chunk.z)
+        return getFactionAt(fLocation)
+    }
+
+    fun getFactionAt(fLocation: FLocation): Faction? {
+        return factionRepository.findByLocation(fLocation)
+    }
+
+    fun claimLand(faction: Faction, chunk: Chunk): Boolean {
+        val location = FLocation(chunk.world.name, chunk.x, chunk.z)
+        return claimLand(faction, location)
+    }
+
+    fun claimLand(faction: Faction, fLocation: FLocation): Boolean {
+        val existingFaction = getFactionAt(fLocation)
         if (existingFaction != null) {
             return false
         }
 
-        if (!factionRepository.addClaim(faction.id, location)) {
-            return false
-        }
-
-        val updatedClaims = faction.claims + location
-        val updatedFaction = faction.copy(claims = updatedClaims)
-        return factionRepository.saveFaction(updatedFaction)
+        return factionRepository.addClaim(faction.id, fLocation)
     }
 
-    fun unclaimLand(location: FLocation): Boolean {
-        return factionRepository.removeClaim(location)
+    fun unclaimLand(fLocation: FLocation): Boolean {
+        return factionRepository.removeClaim(fLocation)
     }
 
-    fun setHome(faction: Faction, location: Location): Boolean {
+    fun setFactionHome(faction: Faction, location: Location): Boolean {
         val updatedFaction = faction.copy(home = location)
-        return factionRepository.saveFaction(updatedFaction)
+        return factionRepository.save(updatedFaction)
     }
 
     fun getFactionsPlayers(faction: Faction): List<FPlayer> {
-        return fPlayerRepository.getPlayersInFaction(faction.id)
+        return fPlayerRepository.findByFaction(faction.id)
+    }
+
+    fun setFactionDescription(faction: Faction, description: String): Boolean {
+        val updatedFaction = faction.copy(description = description)
+        return factionRepository.save(updatedFaction)
+    }
+
+    fun setFactionOpenStatus(faction: Faction, isOpen: Boolean): Boolean {
+        val updatedFaction = faction.copy(isOpen = isOpen)
+        return factionRepository.save(updatedFaction)
+    }
+
+    fun setFactionName(faction: Faction, name: String): Boolean {
+        if (getFactionByName(name) != null) {
+            return false
+        }
+        val updatedFaction = faction.copy(name = name)
+        return factionRepository.save(updatedFaction)
+    }
+
+    fun setFactionLeader(faction: Faction, player: FPlayer): Boolean {
+        val currentLeader = getFactionsPlayers(faction).find { it.role == FactionRole.LEADER }
+
+        val updatedFaction = faction.copy(leaderId = player.uuid)
+        if (!factionRepository.save(updatedFaction)) {
+            return false
+        }
+
+        val updatedPlayer = player.copy(role = FactionRole.LEADER)
+        if (!fPlayerRepository.save(updatedPlayer)) {
+            factionRepository.save(faction)
+            return false
+        }
+
+        if (currentLeader != null && currentLeader.uuid != player.uuid) {
+            val demotedLeader = currentLeader.copy(role = FactionRole.OFFICER)
+            fPlayerRepository.save(demotedLeader)
+        }
+
+        return true
     }
 
     private fun generateUniqueId(name: String): String {
@@ -129,11 +196,12 @@ class FactionService(
         var id = baseId.ifEmpty { "faction" }
 
         var counter = 1
-        while (factionRepository.getFaction(id) != null) {
+        while (factionRepository.findById(id) != null) {
             id = "$baseId$counter"
             counter++
         }
 
         return id
     }
+
 }

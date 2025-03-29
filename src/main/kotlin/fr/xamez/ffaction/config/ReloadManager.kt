@@ -1,4 +1,3 @@
-// src/main/kotlin/fr/xamez/ffaction/util/ReloadManager.kt
 package fr.xamez.ffaction.config
 
 import org.bukkit.plugin.Plugin
