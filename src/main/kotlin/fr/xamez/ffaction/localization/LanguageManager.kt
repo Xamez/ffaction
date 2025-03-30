@@ -128,6 +128,10 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
         }
     }
 
+    fun get(key: LocalizationKey): Component {
+        return get(key.key)
+    }
+
     fun get(key: String, vararg replacements: Pair<String, String>): Component {
         val text = getString(key, *replacements)
         return if (text.contains('&')) {
@@ -135,6 +139,10 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
         } else {
             miniMessage.deserialize(text)
         }
+    }
+
+    fun get(key: LocalizationKey, vararg replacements: Pair<String, String>): Component {
+        return get(key.key, *replacements)
     }
 
     override fun reload(): Boolean {
@@ -147,4 +155,5 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
             return false
         }
     }
+
 }

@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import com.mojang.brigadier.builder.RequiredArgumentBuilder.argument
 import fr.xamez.ffaction.command.base.ICommand
 import fr.xamez.ffaction.localization.LanguageManager
+import fr.xamez.ffaction.localization.LocalizationKey
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -24,8 +25,9 @@ class CreateFactionCommand(
             val source = context.source
             val factionName = StringArgumentType.getString(context, "name")
             source.sender.sendMessage(
-                languageManager.get("command.faction.create.success", "faction" to factionName),
+                languageManager.get(LocalizationKey.COMMAND_FACTION_CREATE_SUCCESS, "faction" to factionName),
             )
             Command.SINGLE_SUCCESS
         })
+
 }

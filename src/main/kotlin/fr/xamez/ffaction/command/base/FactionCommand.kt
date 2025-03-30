@@ -39,4 +39,5 @@ class FactionCommand(
     override val permission: String = "faction.command"
 
     override val subCommands: List<ICommand> = commands
+
 }
