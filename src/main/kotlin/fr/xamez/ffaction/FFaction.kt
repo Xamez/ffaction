@@ -18,6 +18,7 @@ class FFaction : JavaPlugin() {
         val reloadManager = ReloadManager(this)
         val configManager = ConfigManager(this)
         val languageManager = LanguageManager(this, configManager)
+
         storageManager = StorageManager(this, configManager)
 
         factionAPI = FFactionAPIImpl(storageManager, this)
@@ -26,7 +27,7 @@ class FFaction : JavaPlugin() {
         reloadManager.register("language", languageManager)
         reloadManager.register("storage", storageManager)
 
-        CommandRegistrar.register(this, reloadManager, configManager, languageManager)
+        CommandRegistrar.register(this, reloadManager, configManager, languageManager, factionAPI)
     }
 
     override fun onDisable() {
@@ -38,4 +39,5 @@ class FFaction : JavaPlugin() {
     fun getAPI(): FFactionAPI {
         return factionAPI
     }
+
 }

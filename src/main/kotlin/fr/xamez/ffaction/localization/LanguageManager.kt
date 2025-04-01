@@ -5,6 +5,7 @@ import fr.xamez.ffaction.config.Reloadable
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import org.bukkit.command.CommandSender
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.plugin.Plugin
 import java.io.File
@@ -23,8 +24,15 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
 
     private val undefinedKey = "<red><hover:show_text:'You should provide a translation for this key'>%s</hover></red>"
 
+    // TODO: Find a way to support both MiniMessage and LegacyComponentSerializer in the same message
     private val miniMessage = MiniMessage.miniMessage()
     private val legacySerializer = LegacyComponentSerializer.legacySection()
+
+    // TODO: Fix issue above or find another way of implementing this
+    private val prefix: Component by lazy {
+        val prefixText = config.getString("message.prefix", "<gray>[<aqua><bold>FFaction</bold><gray>] ")
+        miniMessage.deserialize(prefixText)
+    }
 
     init {
         initializeLanguages()
@@ -35,7 +43,7 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
 
         val langFilenames = LangFileExtractor.extractLangFilenames()
 
-        langFromConfig = config.getString("language") ?: run {
+        langFromConfig = config.getString("messages.lang") ?: run {
             plugin.logger.warning("Language not found in config, falling back to English")
             fallbackLang
         }
@@ -143,6 +151,22 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
 
     fun get(key: LocalizationKey, vararg replacements: Pair<String, String>): Component {
         return get(key.key, *replacements)
+    }
+
+    fun sendMessage(sender: CommandSender, key: String) {
+        sender.sendMessage(prefix.append(get(key)))
+    }
+
+    fun sendMessage(sender: CommandSender, key: LocalizationKey) {
+        sender.sendMessage(prefix.append(get(key)))
+    }
+
+    fun sendMessage(sender: CommandSender, key: String, vararg replacements: Pair<String, String>) {
+        sender.sendMessage(prefix.append(get(key, *replacements)))
+    }
+
+    fun sendMessage(sender: CommandSender, key: LocalizationKey, vararg replacements: Pair<String, String>) {
+        sender.sendMessage(prefix.append(get(key, *replacements)))
     }
 
     override fun reload(): Boolean {

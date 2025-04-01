@@ -53,10 +53,7 @@ class FFactionAPIImpl(
         }
 
         val currentFaction = getPlayerFaction(fPlayer)
-        if (currentFaction != null) {
-            plugin.logger.info("Player ${player.name} already has a faction: ${currentFaction.name}")
-            return null
-        }
+        if (currentFaction != null) return null
 
         return factionService.createFaction(name, fPlayer)
     }

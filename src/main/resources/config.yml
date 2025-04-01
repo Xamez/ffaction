@@ -1,4 +1,10 @@
-language: "en"
+# Server configuration
+server:
+
+# Message configuration
+message:
+  lang: "en"
+  prefix: "<gray>[<aqua><bold>FFaction</bold><gray>] "
 
 # Storage configuration
 storage:

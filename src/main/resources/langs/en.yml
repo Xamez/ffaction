@@ -1,10 +1,20 @@
 command:
-  faction:
-    plugin:
-      loaded: "Plugin has been loaded successfully!"
-    reload:
-      success: "Plugin has been reloaded successfully!"
-      error: "Plugin has failed to reload! See console for more information."
-    create:
-      success: "Faction {faction} has been created successfully!"
-      error: "Faction with this name already exists!"
+
+  error:
+    player_only: "<red>This command can only be executed by a player!"
+    not_in_faction: "<red>You are not in a faction!"
+    leader_only: "<red>Only the faction leader can execute this command!"
+    player_not_found: "<red>Error: Could not retrieve your player data!"
+
+  help:
+    usage_header: "<yellow>Faction Commands"
+
+  reload:
+    success: "<green>Plugin has been reloaded successfully!"
+    error: "<red>Plugin has failed to reload! See console for more information."
+  create:
+    success: "Faction {faction} has been created successfully!"
+    error: "Faction with this name already exists!"
+  disband:
+    success: "Faction {faction} has been disbanded successfully!"
+    error: "Failed to disband faction!"

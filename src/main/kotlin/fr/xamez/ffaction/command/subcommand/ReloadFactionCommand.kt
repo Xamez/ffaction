@@ -8,8 +8,6 @@ import fr.xamez.ffaction.config.ReloadManager
 import fr.xamez.ffaction.localization.LanguageManager
 import fr.xamez.ffaction.localization.LocalizationKey
 import io.papermc.paper.command.brigadier.CommandSourceStack
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 
 class ReloadFactionCommand(
     private val reloadManager: ReloadManager,
@@ -18,19 +16,17 @@ class ReloadFactionCommand(
 
     override val name: String = "reload"
 
-    override val description: Component =
-        Component.text("Reload the whole configuration as well as language", NamedTextColor.GRAY)
-
     override val command: LiteralArgumentBuilder<CommandSourceStack> =
         literal<CommandSourceStack>(name).executes { context ->
             val results = reloadManager.reloadAll()
             val success = results.values.all { it }
 
-            context.source.sender.sendMessage(
+            languageManager.sendMessage(
+                context.source.sender,
                 if (success)
-                    languageManager.get(LocalizationKey.COMMAND_FACTION_RELOAD_SUCCESS)
+                    LocalizationKey.COMMAND_RELOAD_SUCCESS
                 else
-                    languageManager.get(LocalizationKey.COMMAND_FACTION_RELOAD_ERROR),
+                    LocalizationKey.COMMAND_RELOAD_ERROR,
             )
 
             Command.SINGLE_SUCCESS

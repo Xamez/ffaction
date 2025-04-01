@@ -2,11 +2,11 @@ package fr.xamez.ffaction.command.base
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import io.papermc.paper.command.brigadier.CommandSourceStack
-import net.kyori.adventure.text.Component
 
 interface ICommand {
     val name: String
-    val description: Component
+    val description: String
+        get() = "faction.command.$name.description"
     val permission: String
         get() = "faction.command.$name"
     val command: LiteralArgumentBuilder<CommandSourceStack>
