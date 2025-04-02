@@ -19,18 +19,53 @@ class FactionCommand(
     override val name: String = "faction"
 
     override val command: LiteralArgumentBuilder<CommandSourceStack> = literal<CommandSourceStack>(name).apply {
-        commands.forEach {
-            then(it.command.requires { source -> source.sender.hasPermission(it.permission) })
+        commands.forEach { subCommand ->
+            val subCmdBuilder = subCommand.command.requires { source ->
+                source.sender.hasPermission(subCommand.permission)
+            }
+
+            if (subCommand.command.arguments.isNotEmpty()) {
+                subCmdBuilder.executes { context ->
+                    val source = context.source
+                    val sender = source.sender
+
+                    if (!subCommand.checkSender(sender)) {
+                        when (subCommand.commandTarget) {
+                            CommandTarget.PLAYER -> languageManager.sendMessage(
+                                sender,
+                                LocalizationKey.COMMAND_PLAYER_ONLY
+                            )
+
+                            CommandTarget.CONSOLE -> languageManager.sendMessage(
+                                sender,
+                                LocalizationKey.COMMAND_CONSOLE_ONLY
+                            )
+
+                            else -> {}
+                        }
+                        return@executes Command.SINGLE_SUCCESS
+                    }
+
+                    languageManager.sendMessage(
+                        sender, LocalizationKey.COMMAND_USAGE_FORMAT,
+                        "usage" to subCommand.getUsage("faction")
+                    )
+
+                    Command.SINGLE_SUCCESS
+                }
+            }
+
+            then(subCmdBuilder)
         }
     }.requires { source -> source.sender.hasPermission(permission) }.executes { context ->
         val source = context.source
         languageManager.sendMessage(source.sender, LocalizationKey.COMMAND_HELP_USAGE_HEADER)
 
         subCommands.filter { source.sender.hasPermission(it.permission) }.forEach { subCommand ->
-            // TODO: Make this message customizable using language files
             source.sender.sendMessage(
                 Component.text("${subCommand.getUsage("faction")} ", NamedTextColor.YELLOW)
-                    .append(Component.text("- ", NamedTextColor.GRAY)).append(languageManager.get(subCommand.description))
+                    .append(Component.text("- ", NamedTextColor.GRAY))
+                    .append(languageManager.get(subCommand.description))
             )
         }
         Command.SINGLE_SUCCESS

@@ -31,4 +31,5 @@ class ReloadFactionCommand(
 
             Command.SINGLE_SUCCESS
         }
+
 }
