@@ -11,6 +11,7 @@ interface FFactionAPI {
     fun getPlayer(uuid: UUID): FPlayer?
     fun getPlayer(player: Player): FPlayer?
     fun getPlayerByName(name: String): FPlayer?
+    fun createPlayerIfNotExists(player: Player): FPlayer
     fun savePlayer(player: FPlayer): Boolean
     fun getPlayerFaction(player: FPlayer): Faction?
     fun getPlayerFaction(player: Player): Faction?

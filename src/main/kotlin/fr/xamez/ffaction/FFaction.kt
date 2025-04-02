@@ -5,6 +5,7 @@ import fr.xamez.ffaction.api.FFactionAPIImpl
 import fr.xamez.ffaction.command.CommandRegistrar
 import fr.xamez.ffaction.config.ConfigManager
 import fr.xamez.ffaction.config.ReloadManager
+import fr.xamez.ffaction.listener.ListenerManager
 import fr.xamez.ffaction.localization.LanguageManager
 import fr.xamez.ffaction.storage.StorageManager
 import org.bukkit.plugin.java.JavaPlugin
@@ -18,10 +19,9 @@ class FFaction : JavaPlugin() {
         val reloadManager = ReloadManager(this)
         val configManager = ConfigManager(this)
         val languageManager = LanguageManager(this, configManager)
-
         storageManager = StorageManager(this, configManager)
-
         factionAPI = FFactionAPIImpl(storageManager, this)
+        val listenerManager = ListenerManager(this, factionAPI, configManager, languageManager)
 
         reloadManager.register("config", configManager)
         reloadManager.register("language", languageManager)

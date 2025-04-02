@@ -30,6 +30,8 @@ class FFactionAPIImpl(
 
     override fun getPlayerByName(name: String): FPlayer? = factionService.getPlayerByName(name)
 
+    override fun createPlayerIfNotExists(player: Player): FPlayer = factionService.createPlayerIfNotExists(player)
+
     override fun savePlayer(player: FPlayer): Boolean = factionService.savePlayer(player)
 
     override fun getPlayerFaction(player: FPlayer): Faction? = factionService.getPlayerFaction(player)

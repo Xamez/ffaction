@@ -19,6 +19,23 @@ class FactionService(
 
     fun getPlayerByName(name: String): FPlayer? = fPlayerRepository.findByName(name)
 
+    fun createPlayerIfNotExists(player: Player): FPlayer {
+        val existingPlayer = getPlayer(player.uniqueId)
+        if (existingPlayer != null) {
+            return existingPlayer
+        }
+
+        val newPlayer = FPlayer(
+            uuid = player.uniqueId,
+            name = player.name,
+            role = FactionRole.MEMBER,
+            factionId = null
+        )
+
+        savePlayer(newPlayer)
+        return newPlayer
+    }
+
     fun savePlayer(player: FPlayer): Boolean = fPlayerRepository.save(player)
 
     fun getPlayerFaction(player: FPlayer): Faction? {
@@ -82,11 +99,6 @@ class FactionService(
         }
 
         return faction
-    }
-
-    fun createFaction(name: String, player: Player): Faction? {
-        val fPlayer = getPlayer(player) ?: return null
-        return createFaction(name, fPlayer)
     }
 
     fun disbandFaction(faction: Faction): Boolean {

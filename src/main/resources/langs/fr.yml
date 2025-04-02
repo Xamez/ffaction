@@ -2,19 +2,25 @@ command:
 
   error:
     player_only: "<red>Cette commande ne peut être exécutée que par un joueur !"
+    console_only: "<red>Cette commande ne peut être exécutée que depuis la console."
     not_in_faction: "<red>Vous n'êtes pas dans une faction !"
     leader_only: "<red>Seul le chef de la faction peut exécuter cette commande !"
     player_not_found: "<red>Erreur: impossible de récupérer vos données de joueur !"
 
   help:
+    description: "<yellow>Commande d'aide de la faction."
+    usage: "Usage: {usage}"
     usage_header: "<yellow>Faction Commands"
 
   reload:
+    description: "<yellow>Recharger la configuration du plugin."
     success: "<green>Le plugin a été rechargé avec succès !"
     error: "<red>Le plugin n'a pas pu être rechargé ! Voir la console pour plus d'informations."
   create:
+    description: "<yellow>Créer une nouvelle faction."
     success: "La faction {faction} a bien été créée !"
     error: "Une faction avec ce nom existe déjà !"
   disband:
+    description: "<yellow>Dissoudre votre faction."
     success: "La faction {faction} a bien été dissoute !"
     error: "Erreur lors de la dissolution de la faction !"
