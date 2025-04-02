@@ -16,8 +16,8 @@ import java.util.*
 
 class LanguageManager(private val plugin: Plugin, private val config: ConfigManager) : Reloadable {
 
-    private val fallbackLang = "en"
     private val langFolderName = "langs"
+    private val fallbackLang = "en"
     private val langFolder = File(plugin.dataFolder, langFolderName)
     private lateinit var langFromConfig: String
     private lateinit var langConfig: YamlConfiguration
@@ -41,9 +41,9 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
     private fun initializeLanguages() {
         if (!langFolder.exists()) langFolder.mkdirs()
 
-        val langFilenames = LangFileExtractor.extractLangFilenames()
+        val langFilenames = LangFileUtil.extractLangFilenames()
 
-        langFromConfig = config.getString("messages.lang") ?: run {
+        langFromConfig = config.getString("message.lang") ?: run {
             plugin.logger.warning("Language not found in config, falling back to English")
             fallbackLang
         }
@@ -55,7 +55,7 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
                 plugin.logger.info("Created language file: $langFileName")
             } else {
                 try {
-                    YamlConfiguration.loadConfiguration(targetFile)
+                    LangFileUtil.loadConfiguration(targetFile)
                     updateLanguageFile(langFileName, targetFile)
                 } catch (e: Exception) {
                     createBackup(targetFile)
@@ -67,7 +67,7 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
 
         val langFile = File(langFolder, "$langFromConfig.yml")
         try {
-            langConfig = YamlConfiguration.loadConfiguration(langFile)
+            langConfig = LangFileUtil.loadConfiguration(langFile)
             plugin.logger.info("Loaded language: $langFromConfig")
         } catch (e: Exception) {
             createBackup(langFile)
@@ -76,7 +76,7 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
             val fallbackFile = File(langFolder, "$fallbackLang.yml")
             if (!fallbackFile.exists())
                 plugin.saveResource("$langFolderName/$fallbackLang.yml", false)
-            langConfig = YamlConfiguration.loadConfiguration(fallbackFile)
+            langConfig = LangFileUtil.loadConfiguration(fallbackFile)
         }
     }
 
@@ -93,11 +93,11 @@ class LanguageManager(private val plugin: Plugin, private val config: ConfigMana
 
     private fun updateLanguageFile(langFileName: String, existingFile: File) {
         try {
-            val existingConfig = YamlConfiguration.loadConfiguration(existingFile)
+            val existingConfig = LangFileUtil.loadConfiguration(existingFile)
 
             val defaultConfigStream = plugin.getResource("$langFolderName/$langFileName")
             if (defaultConfigStream != null) {
-                val defaultConfig = YamlConfiguration.loadConfiguration(defaultConfigStream.reader())
+                val defaultConfig = LangFileUtil.loadConfiguration(defaultConfigStream.reader())
                 var updated = false
 
                 for (key in defaultConfig.getKeys(true)) {
