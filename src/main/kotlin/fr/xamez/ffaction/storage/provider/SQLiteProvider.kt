@@ -24,7 +24,7 @@ class SQLiteProvider(
     override fun initialize(): Boolean {
         return try {
             Class.forName("org.sqlite.JDBC")
-            val databaseFile = File(plugin.dataFolder, "${credentials.database}.db")
+            val databaseFile = File(plugin.dataFolder, "$storageDirectoryName/${credentials.database}.db")
             if (!databaseFile.parentFile.exists()) {
                 databaseFile.parentFile.mkdirs()
             }

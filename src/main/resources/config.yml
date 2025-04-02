@@ -22,9 +22,9 @@ storage:
 
   # SQLite configuration
   sqlite:
-    filename: "ffaction/data"
+    filename: "data"
     tablePrefix: "ffaction_"
 
   # YAML configuration
   yaml:
-    filename: "ffaction/data.yml"
+    filename: "data"

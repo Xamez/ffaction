@@ -22,7 +22,7 @@ class YamlProvider(
 
     override fun initialize(): Boolean {
         return try {
-            file = File(plugin.dataFolder, "$filename.yml")
+            file = File(plugin.dataFolder, "$storageDirectoryName/$filename.yml")
 
             if (!file.exists()) {
                 file.parentFile.mkdirs()

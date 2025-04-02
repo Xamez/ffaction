@@ -47,14 +47,14 @@ class StorageManager(
 
             StorageType.SQLITE -> {
                 val credentials = DatabaseCredentials(
-                    database = configManager.getString("storage.sqlite.filename", "ffaction/data"),
+                    database = configManager.getString("storage.sqlite.filename", "data"),
                     tablePrefix = configManager.getString("storage.sqlite.tablePrefix", "ffaction_")
                 )
                 SQLiteProvider(plugin, credentials)
             }
 
             StorageType.YAML -> {
-                YamlProvider(plugin, configManager.getString("storage.yaml.filename", "ffaction/data"))
+                YamlProvider(plugin, configManager.getString("storage.yaml.filename", "data"))
             }
         }
 
