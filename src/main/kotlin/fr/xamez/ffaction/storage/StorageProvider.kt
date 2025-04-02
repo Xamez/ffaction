@@ -15,4 +15,9 @@ interface StorageProvider {
     fun getFPlayerRepository(): FPlayerRepository
     fun getFactionRepository(): FactionRepository
 
+    fun reload(): Boolean {
+        shutdown()
+        return initialize()
+    }
+
 }

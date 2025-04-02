@@ -3,7 +3,6 @@ package fr.xamez.ffaction.api.repository
 import fr.xamez.ffaction.api.model.FLocation
 import fr.xamez.ffaction.api.model.Faction
 import fr.xamez.ffaction.api.model.FactionRelation
-import org.bukkit.Location
 
 interface FactionRepository : Repository<Faction, String> {
 

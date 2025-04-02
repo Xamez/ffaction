@@ -15,6 +15,7 @@ class SQLFPlayerRepository(
 ) : AbstractRepository<FPlayer, UUID>(logger, useCache), FPlayerRepository {
 
     init {
+        clearCache()
         initTables()
     }
 

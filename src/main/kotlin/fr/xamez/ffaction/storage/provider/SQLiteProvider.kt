@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import fr.xamez.ffaction.api.repository.FPlayerRepository
 import fr.xamez.ffaction.api.repository.FactionRepository
-import fr.xamez.ffaction.storage.DatabaseCredentials
 import fr.xamez.ffaction.storage.StorageProvider
 import fr.xamez.ffaction.storage.impl.sql.SQLFPlayerRepository
 import fr.xamez.ffaction.storage.impl.sql.SQLFactionRepository
@@ -13,7 +12,6 @@ import java.io.File
 
 class SQLiteProvider(
     private val plugin: Plugin,
-    private val credentials: DatabaseCredentials
 ) : StorageProvider {
 
     private lateinit var factionRepository: FactionRepository
@@ -24,7 +22,7 @@ class SQLiteProvider(
     override fun initialize(): Boolean {
         return try {
             Class.forName("org.sqlite.JDBC")
-            val databaseFile = File(plugin.dataFolder, "$storageDirectoryName/${credentials.database}.db")
+            val databaseFile = File(plugin.dataFolder, "$storageDirectoryName/data.db")
             if (!databaseFile.parentFile.exists()) {
                 databaseFile.parentFile.mkdirs()
             }

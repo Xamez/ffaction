@@ -19,12 +19,3 @@ storage:
     username: "root"
     password: ""
     tablePrefix: "ffaction_"
-
-  # SQLite configuration
-  sqlite:
-    filename: "data"
-    tablePrefix: "ffaction_"
-
-  # YAML configuration
-  yaml:
-    filename: "data"

@@ -16,6 +16,10 @@ class YamlFPlayerRepository(
     useCache: Boolean = true
 ) : AbstractRepository<FPlayer, UUID>(logger, useCache), FPlayerRepository {
 
+    init {
+        clearCache()
+    }
+
     private fun saveConfig() {
         try {
             config.save(configFile)
@@ -26,21 +30,20 @@ class YamlFPlayerRepository(
     }
 
     override fun fetchById(id: UUID): FPlayer? {
-        val section = config.getConfigurationSection("players.$id") ?: return null
+        val section = config.getConfigurationSection("$id") ?: return null
         return loadPlayerFromSection(id, section)
     }
 
     override fun fetchAll(): List<FPlayer> {
         val result = mutableListOf<FPlayer>()
-        val playersSection = config.getConfigurationSection("players") ?: return result
 
-        for (idStr in playersSection.getKeys(false)) {
+        for (idStr in config.getKeys(false)) {
             try {
                 val id = UUID.fromString(idStr)
-                val section = playersSection.getConfigurationSection(idStr) ?: continue
+                val section = config.getConfigurationSection(idStr) ?: continue
                 loadPlayerFromSection(id, section)?.let { result.add(it) }
             } catch (e: IllegalArgumentException) {
-                logger.warning("Invalid UUID format in players section: $idStr")
+                logger.warning("Invalid UUID format in player data: $idStr")
             }
         }
 
@@ -49,7 +52,7 @@ class YamlFPlayerRepository(
 
     override fun persist(entity: FPlayer): Boolean {
         return try {
-            val path = "players.${entity.uuid}"
+            val path = "${entity.uuid}"
 
             config.set("$path.name", entity.name)
             config.set("$path.factionId", entity.factionId)
@@ -68,7 +71,7 @@ class YamlFPlayerRepository(
 
     override fun removeById(id: UUID): Boolean {
         return try {
-            config.set("players.$id", null)
+            config.set("$id", null)
             saveConfig()
             true
         } catch (e: Exception) {
@@ -84,12 +87,11 @@ class YamlFPlayerRepository(
         return when (queryType) {
             "findByName" -> {
                 val name = params["name"] as? String ?: return null
-                val playersSection = config.getConfigurationSection("players") ?: return null
 
-                for (idStr in playersSection.getKeys(false)) {
+                for (idStr in config.getKeys(false)) {
                     try {
                         val id = UUID.fromString(idStr)
-                        val section = playersSection.getConfigurationSection(idStr) ?: continue
+                        val section = config.getConfigurationSection(idStr) ?: continue
                         if (section.getString("name")?.equals(name, ignoreCase = true) == true) {
                             return loadPlayerFromSection(id, section)
                         }
@@ -99,15 +101,15 @@ class YamlFPlayerRepository(
                 }
                 null
             }
+
             "findByFaction" -> {
                 val factionId = params["factionId"] as? String ?: return emptyList<FPlayer>()
-                val playersSection = config.getConfigurationSection("players") ?: return emptyList<FPlayer>()
-                
+
                 val result = mutableListOf<FPlayer>()
-                for (idStr in playersSection.getKeys(false)) {
+                for (idStr in config.getKeys(false)) {
                     try {
                         val id = UUID.fromString(idStr)
-                        val section = playersSection.getConfigurationSection(idStr) ?: continue
+                        val section = config.getConfigurationSection(idStr) ?: continue
                         if (section.getString("factionId") == factionId) {
                             loadPlayerFromSection(id, section)?.let { result.add(it) }
                         }
@@ -117,6 +119,7 @@ class YamlFPlayerRepository(
                 }
                 result
             }
+
             else -> null
         }
     }
@@ -157,4 +160,5 @@ class YamlFPlayerRepository(
             return null
         }
     }
+
 }

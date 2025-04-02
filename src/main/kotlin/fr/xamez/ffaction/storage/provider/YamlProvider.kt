@@ -11,28 +11,38 @@ import java.io.File
 
 class YamlProvider(
     private val plugin: Plugin,
-    private val filename: String = "data.yml"
 ) : StorageProvider {
 
-    private lateinit var file: File
-    private lateinit var config: YamlConfiguration
+    private lateinit var factionFile: File
+    private lateinit var playerFile: File
+    private lateinit var factionConfig: YamlConfiguration
+    private lateinit var playerConfig: YamlConfiguration
 
     private lateinit var factionRepository: FactionRepository
     private lateinit var fPlayerRepository: FPlayerRepository
 
     override fun initialize(): Boolean {
         return try {
-            file = File(plugin.dataFolder, "$storageDirectoryName/$filename.yml")
+            val parentDir = File(plugin.dataFolder, storageDirectoryName)
+            parentDir.mkdirs()
 
-            if (!file.exists()) {
-                file.parentFile.mkdirs()
-                file.createNewFile()
+            factionFile = File(parentDir, "faction_data.yml")
+            if (!factionFile.exists()) {
+                factionFile.createNewFile()
             }
 
-            config = YamlConfiguration.loadConfiguration(file)
-            factionRepository = YamlFactionRepository(plugin.logger, config, file);
-            fPlayerRepository = YamlFPlayerRepository(plugin.logger, config, file);
-            plugin.logger.info("Successfully initialized YAML storage")
+            playerFile = File(parentDir, "player_data.yml")
+            if (!playerFile.exists()) {
+                playerFile.createNewFile()
+            }
+
+            factionConfig = YamlConfiguration.loadConfiguration(factionFile)
+            playerConfig = YamlConfiguration.loadConfiguration(playerFile)
+
+            factionRepository = YamlFactionRepository(plugin.logger, factionConfig, factionFile)
+            fPlayerRepository = YamlFPlayerRepository(plugin.logger, playerConfig, playerFile)
+
+            plugin.logger.info("Successfully initialized YAML storage with separate files")
             true
         } catch (e: Exception) {
             plugin.logger.severe("Failed to initialize YAML storage: ${e.message}")
@@ -43,7 +53,12 @@ class YamlProvider(
 
     override fun shutdown() {
         try {
-            config.save(file)
+            if (::factionConfig.isInitialized && ::factionFile.isInitialized) {
+                factionConfig.save(factionFile)
+            }
+            if (::playerConfig.isInitialized && ::playerFile.isInitialized) {
+                playerConfig.save(playerFile)
+            }
             plugin.logger.info("YAML data saved")
         } catch (e: Exception) {
             plugin.logger.severe("Error saving YAML data: ${e.message}")
@@ -51,7 +66,9 @@ class YamlProvider(
     }
 
     override fun isConnected(): Boolean {
-        return ::config.isInitialized && ::file.isInitialized && file.exists()
+        return ::factionConfig.isInitialized && ::playerConfig.isInitialized &&
+                ::factionFile.isInitialized && ::playerFile.isInitialized &&
+                factionFile.exists() && playerFile.exists()
     }
 
     override fun getFPlayerRepository(): FPlayerRepository {
@@ -61,4 +78,5 @@ class YamlProvider(
     override fun getFactionRepository(): FactionRepository {
         return factionRepository
     }
+
 }

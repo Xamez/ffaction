@@ -19,6 +19,11 @@ class ReloadManager(private val plugin: Plugin) {
         reloadables.forEach { (name, reloadable) ->
             try {
                 results[name] = reloadable.reload()
+                if (results[name] == true) {
+                    plugin.logger.info("Reloaded $name successfully.")
+                } else {
+                    plugin.logger.warning("Failed to reload $name.")
+                }
             } catch (e: Exception) {
                 plugin.logger.severe("Error reloading $name: ${e.message}")
                 e.printStackTrace()
@@ -29,7 +34,13 @@ class ReloadManager(private val plugin: Plugin) {
     }
 
     fun reload(name: String): Boolean {
-        return reloadables[name]?.reload() ?: false
+        val result = reloadables[name]?.reload()
+        if (result == true) {
+            plugin.logger.info("Reloaded $name successfully.")
+        } else {
+            plugin.logger.warning("Failed to reload $name.")
+        }
+        return result ?: false
     }
 
 }

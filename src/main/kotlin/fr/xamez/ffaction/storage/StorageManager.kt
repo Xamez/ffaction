@@ -46,15 +46,11 @@ class StorageManager(
             }
 
             StorageType.SQLITE -> {
-                val credentials = DatabaseCredentials(
-                    database = configManager.getString("storage.sqlite.filename", "data"),
-                    tablePrefix = configManager.getString("storage.sqlite.tablePrefix", "ffaction_")
-                )
-                SQLiteProvider(plugin, credentials)
+                SQLiteProvider(plugin)
             }
 
             StorageType.YAML -> {
-                YamlProvider(plugin, configManager.getString("storage.yaml.filename", "data"))
+                YamlProvider(plugin)
             }
         }
 
@@ -71,9 +67,7 @@ class StorageManager(
 
     override fun reload(): Boolean {
         try {
-            provider?.shutdown()
-            initialize()
-            return true
+            return provider?.reload() ?: false
         } catch (e: Exception) {
             plugin.logger.severe("Failed to reload storage manager: ${e.message}")
             e.printStackTrace()

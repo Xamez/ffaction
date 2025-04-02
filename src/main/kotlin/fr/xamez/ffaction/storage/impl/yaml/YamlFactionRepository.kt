@@ -6,6 +6,7 @@ import fr.xamez.ffaction.api.model.FactionRelation
 import fr.xamez.ffaction.api.repository.FactionRepository
 import fr.xamez.ffaction.storage.impl.AbstractRepository
 import fr.xamez.ffaction.util.SerializationUtil
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 import java.util.*
@@ -18,6 +19,10 @@ class YamlFactionRepository(
     useCache: Boolean = true
 ) : AbstractRepository<Faction, String>(logger, useCache), FactionRepository {
 
+    init {
+        clearCache()
+    }
+
     private fun saveConfig() {
         try {
             config.save(configFile)
@@ -28,16 +33,15 @@ class YamlFactionRepository(
     }
 
     override fun fetchById(id: String): Faction? {
-        val section = config.getConfigurationSection("factions.$id") ?: return null
+        val section = config.getConfigurationSection(id) ?: return null
         return loadFactionFromSection(id, section)
     }
 
     override fun fetchAll(): List<Faction> {
         val result = mutableListOf<Faction>()
-        val factionsSection = config.getConfigurationSection("factions") ?: return result
 
-        for (id in factionsSection.getKeys(false)) {
-            val section = factionsSection.getConfigurationSection(id) ?: continue
+        for (id in config.getKeys(false)) {
+            val section = config.getConfigurationSection(id) ?: continue
             loadFactionFromSection(id, section)?.let { result.add(it) }
         }
 
@@ -46,7 +50,7 @@ class YamlFactionRepository(
 
     override fun persist(entity: Faction): Boolean {
         return try {
-            val path = "factions.${entity.id}"
+            val path = entity.id
 
             config.set("$path.name", entity.name)
             config.set("$path.description", entity.description)
@@ -84,7 +88,7 @@ class YamlFactionRepository(
 
     override fun removeById(id: String): Boolean {
         return try {
-            config.set("factions.$id", null)
+            config.set(id, null)
             saveConfig()
             true
         } catch (e: Exception) {
@@ -100,10 +104,9 @@ class YamlFactionRepository(
         return when (queryType) {
             "findByName" -> {
                 val name = params["name"] as? String ?: return null
-                val factionsSection = config.getConfigurationSection("factions") ?: return null
 
-                for (id in factionsSection.getKeys(false)) {
-                    val section = factionsSection.getConfigurationSection(id) ?: continue
+                for (id in config.getKeys(false)) {
+                    val section = config.getConfigurationSection(id) ?: continue
                     if (section.getString("name")?.equals(name, ignoreCase = true) == true) {
                         return loadFactionFromSection(id, section)
                     }
@@ -113,17 +116,16 @@ class YamlFactionRepository(
 
             "findByLocation" -> {
                 val location = params["location"] as? FLocation ?: return null
-                val factionsSection = config.getConfigurationSection("factions") ?: return null
 
-                for (id in factionsSection.getKeys(false)) {
-                    val section = factionsSection.getConfigurationSection(id) ?: continue
+                for (id in config.getKeys(false)) {
+                    val section = config.getConfigurationSection(id) ?: continue
                     val claimsSection = section.getConfigurationSection("claims") ?: continue
 
                     for (claimKey in claimsSection.getKeys(false)) {
                         val claim = claimsSection.getConfigurationSection(claimKey) ?: continue
                         val world = claim.getString("world") ?: continue
-                        val chunkX = claim.getInt("chunk_x")
-                        val chunkZ = claim.getInt("chunk_z")
+                        val chunkX = claim.getInt("chunkX")
+                        val chunkZ = claim.getInt("chunkZ")
 
                         if (world == location.world && chunkX == location.chunkX && chunkZ == location.chunkZ) {
                             return loadFactionFromSection(id, section)
@@ -135,15 +137,14 @@ class YamlFactionRepository(
 
             "getClaimsFor" -> {
                 val factionId = params["factionId"] as? String ?: return emptySet<FLocation>()
-                val claimsSection =
-                    config.getConfigurationSection("factions.$factionId.claims") ?: return emptySet<FLocation>()
+                val claimsSection = config.getConfigurationSection("$factionId.claims") ?: return emptySet<FLocation>()
 
                 val claims = mutableSetOf<FLocation>()
                 for (key in claimsSection.getKeys(false)) {
                     val claim = claimsSection.getConfigurationSection(key) ?: continue
                     val world = claim.getString("world") ?: continue
-                    val chunkX = claim.getInt("chunk_x")
-                    val chunkZ = claim.getInt("chunk_z")
+                    val chunkX = claim.getInt("chunkX")
+                    val chunkZ = claim.getInt("chunkZ")
                     claims.add(FLocation(world, chunkX, chunkZ))
                 }
                 claims
@@ -153,16 +154,15 @@ class YamlFactionRepository(
                 val factionId = params["factionId"] as? String ?: return false
                 val location = params["location"] as? FLocation ?: return false
 
-                val factionsSection = config.getConfigurationSection("factions") ?: return false
-                for (id in factionsSection.getKeys(false)) {
-                    val claimsSection = config.getConfigurationSection("factions.$id.claims") ?: continue
+                for (id in config.getKeys(false)) {
+                    val claimsSection = config.getConfigurationSection("$id.claims") ?: continue
                     var claimToRemove: String? = null
 
                     for (claimKey in claimsSection.getKeys(false)) {
                         val claim = claimsSection.getConfigurationSection(claimKey) ?: continue
                         val world = claim.getString("world") ?: continue
-                        val chunkX = claim.getInt("chunk_x")
-                        val chunkZ = claim.getInt("chunk_z")
+                        val chunkX = claim.getInt("chunkX")
+                        val chunkZ = claim.getInt("chunkZ")
 
                         if (world == location.world && chunkX == location.chunkX && chunkZ == location.chunkZ) {
                             claimToRemove = claimKey
@@ -171,16 +171,16 @@ class YamlFactionRepository(
                     }
 
                     if (claimToRemove != null) {
-                        config.set("factions.$id.claims.$claimToRemove", null)
+                        config.set("$id.claims.$claimToRemove", null)
                     }
                 }
 
-                val claimsSection = config.getConfigurationSection("factions.$factionId.claims")
-                    ?: config.createSection("factions.$factionId.claims")
+                val claimsSection = config.getConfigurationSection("$factionId.claims")
+                    ?: config.createSection("$factionId.claims")
                 val nextIndex = claimsSection.getKeys(false).size
-                config.set("factions.$factionId.claims.$nextIndex.world", location.world)
-                config.set("factions.$factionId.claims.$nextIndex.chunk_x", location.chunkX)
-                config.set("factions.$factionId.claims.$nextIndex.chunk_z", location.chunkZ)
+                config.set("$factionId.claims.$nextIndex.world", location.world)
+                config.set("$factionId.claims.$nextIndex.chunkX", location.chunkX)
+                config.set("$factionId.claims.$nextIndex.chunkZ", location.chunkZ)
 
                 saveConfig()
                 true
@@ -190,16 +190,15 @@ class YamlFactionRepository(
                 val location = params["location"] as? FLocation ?: return false
                 var success = false
 
-                val factionsSection = config.getConfigurationSection("factions") ?: return false
-                for (id in factionsSection.getKeys(false)) {
-                    val claimsSection = config.getConfigurationSection("factions.$id.claims") ?: continue
+                for (id in config.getKeys(false)) {
+                    val claimsSection = config.getConfigurationSection("$id.claims") ?: continue
                     var claimToRemove: String? = null
 
                     for (claimKey in claimsSection.getKeys(false)) {
                         val claim = claimsSection.getConfigurationSection(claimKey) ?: continue
                         val world = claim.getString("world") ?: continue
-                        val chunkX = claim.getInt("chunk_x")
-                        val chunkZ = claim.getInt("chunk_z")
+                        val chunkX = claim.getInt("chunkX")
+                        val chunkZ = claim.getInt("chunkZ")
 
                         if (world == location.world && chunkX == location.chunkX && chunkZ == location.chunkZ) {
                             claimToRemove = claimKey
@@ -208,7 +207,7 @@ class YamlFactionRepository(
                     }
 
                     if (claimToRemove != null) {
-                        config.set("factions.$id.claims.$claimToRemove", null)
+                        config.set("$id.claims.$claimToRemove", null)
                         success = true
                         break
                     }
@@ -225,7 +224,7 @@ class YamlFactionRepository(
                 val otherFactionId = params["otherFactionId"] as? String ?: return false
                 val relation = params["relation"] as? FactionRelation ?: return false
 
-                config.set("factions.$factionId.relations.$otherFactionId", relation.name)
+                config.set("$factionId.relations.$otherFactionId", relation.name)
                 saveConfig()
                 true
             }
@@ -234,7 +233,7 @@ class YamlFactionRepository(
                 val factionId = params["factionId"] as? String ?: return null
                 val otherFactionId = params["otherFactionId"] as? String ?: return null
 
-                val relationName = config.getString("factions.$factionId.relations.$otherFactionId") ?: return null
+                val relationName = config.getString("$factionId.relations.$otherFactionId") ?: return null
                 try {
                     FactionRelation.valueOf(relationName)
                 } catch (e: Exception) {
@@ -286,7 +285,7 @@ class YamlFactionRepository(
         ) { it as? FactionRelation }
     }
 
-    private fun loadFactionFromSection(id: String, section: org.bukkit.configuration.ConfigurationSection): Faction? {
+    private fun loadFactionFromSection(id: String, section: ConfigurationSection): Faction? {
         try {
             val leaderIdStr = section.getString("leaderId")
             val leaderId = if (leaderIdStr != null) UUID.fromString(leaderIdStr) else UUID(0, 0)
@@ -330,4 +329,5 @@ class YamlFactionRepository(
             return null
         }
     }
+
 }

@@ -17,6 +17,7 @@ class SQLFactionRepository(
 ) : AbstractRepository<Faction, String>(logger, useCache), FactionRepository {
 
     init {
+        clearCache()
         initTables()
     }
 
