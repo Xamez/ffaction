@@ -17,6 +17,7 @@ class FactionCommand(
 ) : ICommand {
 
     override val name: String = "faction"
+    override val aliases: List<String> = listOf("f")
 
     override val command: LiteralArgumentBuilder<CommandSourceStack> = literal<CommandSourceStack>(name).apply {
         commands.forEach { subCommand ->

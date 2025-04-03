@@ -20,25 +20,24 @@ class CreateFactionCommand(
 
     override val name: String = "create"
     override val commandTarget: CommandTarget = CommandTarget.PLAYER
+    override val aliases: List<String> = listOf("c")
 
     override val command: LiteralArgumentBuilder<CommandSourceStack> = literal<CommandSourceStack>(name).then(
         argument<CommandSourceStack, String>("name", StringArgumentType.string()).executes { context ->
             val source = context.source
-            val sender = source.sender
-
-            val player = sender as Player
+            val player = source.sender as Player
 
             val factionName = StringArgumentType.getString(context, "name")
             val result = factionApi.createFaction(factionName, player)
 
             if (result != null) {
                 languageManager.sendMessage(
-                    sender,
+                    player,
                     LocalizationKey.COMMAND_CREATE_SUCCESS,
                     "faction" to factionName
                 )
             } else {
-                languageManager.sendMessage(sender, LocalizationKey.COMMAND_CREATE_ERROR)
+                languageManager.sendMessage(player, LocalizationKey.COMMAND_CREATE_ERROR)
             }
 
             Command.SINGLE_SUCCESS

@@ -61,16 +61,16 @@ class SQLFactionRepository(
             if (exists == true) {
                 val updated = executor.update(
                     """
-                    UPDATE factions SET 
-                        name = ?, 
-                        description = ?, 
-                        leader_id = ?, 
-                        home = ?,
-                        open = ?,
-                        power = ?,
-                        max_power = ?
-                    WHERE id = ?
-                    """,
+                UPDATE factions SET 
+                    name = ?, 
+                    description = ?, 
+                    leader_id = ?, 
+                    home = ?,
+                    open = ?,
+                    power = ?,
+                    max_power = ?
+                WHERE id = ?
+                """,
                     entity.name,
                     entity.description,
                     entity.leaderId.toString(),
@@ -99,6 +99,37 @@ class SQLFactionRepository(
                         executor.update(
                             "INSERT INTO claims (world, chunk_x, chunk_z, faction_id) VALUES (?, ?, ?, ?)",
                             loc.world, loc.chunkX, loc.chunkZ, entity.id
+                        )
+                    }
+                }
+
+                if (updated) {
+                    val currentMembers = executor.query(
+                        "SELECT uuid FROM players WHERE faction_id = ?",
+                        { rs ->
+                            val members = mutableSetOf<String>()
+                            while (rs.next()) {
+                                members.add(rs.getString("uuid"))
+                            }
+                            members
+                        },
+                        entity.id
+                    ) ?: emptySet()
+
+                    val memberUuids = entity.members.map { it.toString() }.toSet()
+                    val removedMembers = currentMembers - memberUuids
+
+                    for (uuid in removedMembers) {
+                        executor.update(
+                            "UPDATE players SET faction_id = NULL, role = 'MEMBER' WHERE uuid = ?",
+                            uuid
+                        )
+                    }
+
+                    for (uuid in memberUuids) {
+                        executor.update(
+                            "UPDATE players SET faction_id = ? WHERE uuid = ? AND (faction_id IS NULL OR faction_id != ?)",
+                            entity.id, uuid, entity.id
                         )
                     }
                 }
@@ -132,6 +163,13 @@ class SQLFactionRepository(
                         executor.update(
                             "INSERT INTO claims (world, chunk_x, chunk_z, faction_id) VALUES (?, ?, ?, ?)",
                             loc.world, loc.chunkX, loc.chunkZ, entity.id
+                        )
+                    }
+
+                    for (memberId in entity.members) {
+                        executor.update(
+                            "UPDATE players SET faction_id = ? WHERE uuid = ?",
+                            entity.id, memberId.toString()
                         )
                     }
                 }
@@ -336,6 +374,21 @@ class SQLFactionRepository(
 
             val claims = getClaimsFor(id)
 
+            val members = mutableSetOf<UUID>()
+            executor.query(
+                "SELECT uuid FROM players WHERE faction_id = ?",
+                { membersRs ->
+                    while (membersRs.next()) {
+                        try {
+                            members.add(UUID.fromString(membersRs.getString("uuid")))
+                        } catch (e: Exception) {
+                            logger.warning("Invalid UUID format for faction member in $id")
+                        }
+                    }
+                },
+                id
+            )
+
             return Faction(
                 id = id,
                 name = rs.getString("name"),
@@ -346,7 +399,8 @@ class SQLFactionRepository(
                 power = rs.getDouble("power"),
                 maxPower = rs.getDouble("max_power"),
                 claims = claims,
-                relations = relations
+                relations = relations,
+                members = members
             )
         } catch (e: Exception) {
             logger.warning("Failed to extract faction: ${e.message}")

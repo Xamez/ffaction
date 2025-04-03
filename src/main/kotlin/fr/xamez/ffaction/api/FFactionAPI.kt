@@ -18,6 +18,9 @@ interface FFactionAPI {
 
     fun getFaction(id: String): Faction?
     fun getFactionByName(name: String): Faction?
+    fun getFactionMembers(faction: Faction): List<FPlayer>
+    fun addFactionMember(faction: Faction, player: FPlayer): Boolean
+    fun removeFactionMember(faction: Faction, player: FPlayer): Boolean
     fun getAllFactions(): List<Faction>
     fun createFaction(name: String, player: Player): Faction?
     fun disbandFaction(faction: Faction): Boolean

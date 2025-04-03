@@ -15,6 +15,7 @@ class ReloadFactionCommand(
 ) : ICommand {
 
     override val name: String = "reload"
+    override val aliases: List<String> = listOf("r")
 
     override val command: LiteralArgumentBuilder<CommandSourceStack> =
         literal<CommandSourceStack>(name).executes { context ->

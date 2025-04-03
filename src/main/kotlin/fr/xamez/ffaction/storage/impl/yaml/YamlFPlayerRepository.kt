@@ -102,34 +102,12 @@ class YamlFPlayerRepository(
                 null
             }
 
-            "findByFaction" -> {
-                val factionId = params["factionId"] as? String ?: return emptyList<FPlayer>()
-
-                val result = mutableListOf<FPlayer>()
-                for (idStr in config.getKeys(false)) {
-                    try {
-                        val id = UUID.fromString(idStr)
-                        val section = config.getConfigurationSection(idStr) ?: continue
-                        if (section.getString("factionId") == factionId) {
-                            loadPlayerFromSection(id, section)?.let { result.add(it) }
-                        }
-                    } catch (e: IllegalArgumentException) {
-                        continue
-                    }
-                }
-                result
-            }
-
             else -> null
         }
     }
 
     override fun findByName(name: String): FPlayer? {
         return query("findByName", mapOf("name" to name)) { it as? FPlayer }
-    }
-
-    override fun findByFaction(factionId: String): List<FPlayer> {
-        return query("findByFaction", mapOf("factionId" to factionId)) { it as? List<FPlayer> } ?: emptyList()
     }
 
     private fun loadPlayerFromSection(id: UUID, section: org.bukkit.configuration.ConfigurationSection): FPlayer? {

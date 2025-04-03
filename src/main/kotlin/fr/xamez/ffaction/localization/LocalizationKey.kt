@@ -7,10 +7,21 @@ enum class LocalizationKey(val key: String) {
 
     COMMAND_RELOAD_SUCCESS("command.reload.success"),
     COMMAND_RELOAD_ERROR("command.reload.error"),
+
     COMMAND_CREATE_SUCCESS("command.create.success"),
     COMMAND_CREATE_ERROR("command.create.error"),
+
     COMMAND_DISBAND_SUCCESS("command.disband.success"),
     COMMAND_DISBAND_ERROR("command.disband.error"),
+
+    COMMAND_FACTIONS_LIST_HEADER("command.list.header"),
+    COMMAND_FACTIONS_LIST_ENTRY("command.list.entry"),
+    COMMAND_NO_FACTION("command.list.no_faction"),
+
+    COMMAND_MEMBERS_HEADER("command.members.header"),
+    COMMAND_MEMBERS_ENTRY("command.members.entry"),
+    COMMAND_MEMBERS_ROLE("command.members.role"),
+
 
     COMMAND_NOT_IN_FACTION("command.error.not_in_faction"),
     COMMAND_LEADER_ONLY("command.error.leader_only"),

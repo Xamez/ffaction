@@ -4,7 +4,6 @@ import com.mojang.brigadier.Command
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import fr.xamez.ffaction.api.FFactionAPI
-import fr.xamez.ffaction.api.model.FactionRole
 import fr.xamez.ffaction.command.base.CommandTarget
 import fr.xamez.ffaction.command.base.ICommand
 import fr.xamez.ffaction.localization.LanguageManager
@@ -12,14 +11,14 @@ import fr.xamez.ffaction.localization.LocalizationKey
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import org.bukkit.entity.Player
 
-class DisbandFactionCommand(
+class ListFactionMembersCommand(
     private val factionApi: FFactionAPI,
     private val languageManager: LanguageManager
 ) : ICommand {
 
-    override val name: String = "disband"
+    override val name: String = "members"
     override val commandTarget: CommandTarget = CommandTarget.PLAYER
-    override val aliases: List<String> = listOf("d")
+    override val aliases: List<String> = listOf("m")
 
     override val command: LiteralArgumentBuilder<CommandSourceStack> =
         literal<CommandSourceStack>(name).executes { context ->
@@ -38,21 +37,29 @@ class DisbandFactionCommand(
                 return@executes Command.SINGLE_SUCCESS
             }
 
-            if (fPlayer.role != FactionRole.LEADER) {
-                languageManager.sendMessage(player, LocalizationKey.COMMAND_LEADER_ONLY)
-                return@executes Command.SINGLE_SUCCESS
-            }
+            val members = factionApi.getFactionMembers(faction)
+            languageManager.sendMessage(
+                player,
+                LocalizationKey.COMMAND_MEMBERS_HEADER,
+                "faction" to faction.name
+            )
 
-            val factionName = faction.name
-            if (factionApi.disbandFaction(faction)) {
-                languageManager.sendMessage(
-                    player,
-                    LocalizationKey.COMMAND_DISBAND_SUCCESS,
-                    "faction" to factionName
-                )
-            } else {
-                languageManager.sendMessage(player, LocalizationKey.COMMAND_DISBAND_ERROR)
-            }
+            members.groupBy { it.role }
+                .forEach { (role, players) ->
+                    languageManager.sendMessage(
+                        player,
+                        LocalizationKey.COMMAND_MEMBERS_ROLE,
+                        "role" to role.name
+                    )
+                    players.forEach { member ->
+                        languageManager.sendMessage(
+                            player,
+                            LocalizationKey.COMMAND_MEMBERS_ENTRY,
+                            "player" to member.name,
+                            "online" to (member.isOnline().toString())
+                        )
+                    }
+                }
 
             Command.SINGLE_SUCCESS
         }

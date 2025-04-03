@@ -1,5 +1,6 @@
 package fr.xamez.ffaction.api.model
 
+import org.bukkit.Bukkit
 import java.util.*
 
 data class FPlayer(
@@ -21,6 +22,10 @@ data class FPlayer(
 
     fun hasPower(): Boolean {
         return power > 0
+    }
+
+    fun isOnline(): Boolean {
+        return Bukkit.getPlayer(uuid) != null
     }
 
 }

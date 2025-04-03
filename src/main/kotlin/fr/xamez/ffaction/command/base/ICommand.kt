@@ -14,6 +14,8 @@ interface ICommand {
     val name: String
     val description: String
         get() = "command.$name.description"
+    val aliases: List<String>
+        get() = emptyList()
     val permission: String
         get() = "faction.command.$name"
     val command: LiteralArgumentBuilder<CommandSourceStack>

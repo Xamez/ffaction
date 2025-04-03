@@ -6,6 +6,5 @@ import java.util.*
 interface FPlayerRepository : Repository<FPlayer, UUID> {
 
     fun findByName(name: String): FPlayer?
-    fun findByFaction(factionId: String): List<FPlayer>
 
 }

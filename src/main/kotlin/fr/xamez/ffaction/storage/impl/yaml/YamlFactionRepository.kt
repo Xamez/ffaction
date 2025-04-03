@@ -77,6 +77,11 @@ class YamlFactionRepository(
                 config.set("$path.claims.$index.chunkZ", location.chunkZ)
             }
 
+            config.set("$path.members", null)
+            entity.members.forEachIndexed { index, uuid ->
+                config.set("$path.members.$index", uuid.toString())
+            }
+
             saveConfig()
             true
         } catch (e: Exception) {
@@ -311,6 +316,19 @@ class YamlFactionRepository(
 
             val claims = getClaimsFor(id)
 
+            val members = mutableSetOf<UUID>()
+            val membersSection = section.getConfigurationSection("members")
+            if (membersSection != null) {
+                for (key in membersSection.getKeys(false)) {
+                    val uuidStr = membersSection.getString(key) ?: continue
+                    try {
+                        members.add(UUID.fromString(uuidStr))
+                    } catch (e: Exception) {
+                        logger.warning("Invalid UUID format for faction member in $id")
+                    }
+                }
+            }
+
             return Faction(
                 id = id,
                 name = section.getString("name") ?: id,
@@ -321,7 +339,8 @@ class YamlFactionRepository(
                 power = section.getDouble("power", 0.0),
                 maxPower = section.getDouble("maxPower", 10.0),
                 claims = claims,
-                relations = relations
+                relations = relations,
+                members = members
             )
         } catch (e: Exception) {
             logger.warning("Failed to load faction $id: ${e.message}")

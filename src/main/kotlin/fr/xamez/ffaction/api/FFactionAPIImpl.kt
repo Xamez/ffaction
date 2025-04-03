@@ -45,6 +45,16 @@ class FFactionAPIImpl(
 
     override fun getFactionByName(name: String): Faction? = factionService.getFactionByName(name)
 
+    override fun getFactionMembers(faction: Faction): List<FPlayer> = factionService.getFactionsPlayers(faction)
+
+    override fun addFactionMember(faction: Faction, player: FPlayer): Boolean {
+        return factionService.addMemberToFaction(faction, player)
+    }
+
+    override fun removeFactionMember(faction: Faction, player: FPlayer): Boolean {
+        return factionService.removeMemberFromFaction(faction, player)
+    }
+
     override fun getAllFactions(): List<Faction> = factionService.getAllFactions()
 
     override fun createFaction(name: String, player: Player): Faction? {

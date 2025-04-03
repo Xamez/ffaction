@@ -107,26 +107,13 @@ class SQLFPlayerRepository(
                     )
                 }
             }
-            "findByFaction" -> {
-                val factionId = params["factionId"] as? String ?: return null
-                withConnection { executor ->
-                    executor.queryList(
-                        "SELECT * FROM players WHERE faction_id = ?",
-                        { rs -> extractPlayer(rs) },
-                        factionId
-                    )
-                }
-            }
+
             else -> null
         }
     }
 
     override fun findByName(name: String): FPlayer? {
         return query("findByName", mapOf("name" to name)) { it as? FPlayer }
-    }
-
-    override fun findByFaction(factionId: String): List<FPlayer> {
-        return query("findByFaction", mapOf("factionId" to factionId)) { it as? List<FPlayer> } ?: emptyList()
     }
 
     private fun extractPlayer(rs: java.sql.ResultSet): FPlayer {

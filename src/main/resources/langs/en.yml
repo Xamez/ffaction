@@ -24,3 +24,6 @@ command:
     description: "<yellow>Disband your faction."
     success: "Faction {faction} has been disbanded successfully!"
     error: "Failed to disband faction!"
+  list:
+    header: "<yellow>Liste des factions"
+    empty: "Aucune faction trouvée!"

@@ -47,6 +47,9 @@ class FactionService(
     }
 
     fun setPlayerFaction(player: FPlayer, faction: Faction?): Boolean {
+        if (player.factionId != null && faction?.id != player.factionId) {
+            return false
+        }
         val updatedPlayer = player.copy(
             factionId = faction?.id,
             role = if (faction == null) FactionRole.MEMBER else player.role
@@ -81,7 +84,8 @@ class FactionService(
             power = 0.0,
             maxPower = 10.0,
             claims = emptySet(),
-            relations = emptyMap()
+            relations = emptyMap(),
+            members = setOf(player.uuid)
         )
 
         if (!factionRepository.save(faction)) {
@@ -159,10 +163,6 @@ class FactionService(
         return factionRepository.save(updatedFaction)
     }
 
-    fun getFactionsPlayers(faction: Faction): List<FPlayer> {
-        return fPlayerRepository.findByFaction(faction.id)
-    }
-
     fun setFactionDescription(faction: Faction, description: String): Boolean {
         val updatedFaction = faction.copy(description = description)
         return factionRepository.save(updatedFaction)
@@ -201,6 +201,32 @@ class FactionService(
         }
 
         return true
+    }
+
+    fun getFactionsPlayers(faction: Faction): List<FPlayer> {
+        val players = mutableListOf<FPlayer>()
+        for (memberId in faction.members) {
+            fPlayerRepository.findById(memberId)?.let { players.add(it) }
+        }
+        return players
+    }
+
+    fun addMemberToFaction(faction: Faction, player: FPlayer): Boolean {
+        val updatedMembers = faction.members + player.uuid
+        val updatedFaction = faction.copy(members = updatedMembers)
+
+        val updatedPlayer = player.copy(factionId = faction.id)
+
+        return factionRepository.save(updatedFaction) && fPlayerRepository.save(updatedPlayer)
+    }
+
+    fun removeMemberFromFaction(faction: Faction, player: FPlayer): Boolean {
+        val updatedMembers = faction.members - player.uuid
+        val updatedFaction = faction.copy(members = updatedMembers)
+
+        val updatedPlayer = player.copy(factionId = null, role = FactionRole.MEMBER)
+
+        return factionRepository.save(updatedFaction) && fPlayerRepository.save(updatedPlayer)
     }
 
     private fun generateUniqueId(name: String): String {
