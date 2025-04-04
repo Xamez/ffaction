@@ -1,3 +1,11 @@
+# Faction
+faction:
+  maxMembers: 20
+  maxPower: 10
+  minPower: 0
+  maxClaims: 50
+  powerPerLand: 1
+
 # Server configuration
 server:
 

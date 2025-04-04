@@ -5,13 +5,16 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder.literal
 import fr.xamez.ffaction.api.FFactionAPI
 import fr.xamez.ffaction.command.base.ICommand
+import fr.xamez.ffaction.config.ConfigKey
+import fr.xamez.ffaction.config.ConfigManager
 import fr.xamez.ffaction.localization.LanguageManager
 import fr.xamez.ffaction.localization.LocalizationKey
 import io.papermc.paper.command.brigadier.CommandSourceStack
 
 class ListFactionsCommand(
     private val factionApi: FFactionAPI,
-    private val languageManager: LanguageManager
+    private val languageManager: LanguageManager,
+    private val config: ConfigManager
 ) : ICommand {
 
     override val name: String = "list"
@@ -34,6 +37,8 @@ class ListFactionsCommand(
                 "count" to factions.size.toString()
             )
 
+            val maxCount = config.getInt(ConfigKey.FACTION_MAX_MEMBERS)
+
             factions.forEach { faction ->
 
                 val factionMembers = factionApi.getFactionMembers(faction)
@@ -43,7 +48,8 @@ class ListFactionsCommand(
                     LocalizationKey.COMMAND_FACTIONS_LIST_ENTRY,
                     "name" to faction.name,
                     "members" to factionMembers.size.toString(),
-                    "online" to factionMembers.count { it.isOnline() }.toString()
+                    "online" to factionMembers.count { it.isOnline() }.toString(),
+                    "maxCount" to maxCount.toString()
                 )
             }
 

@@ -68,6 +68,7 @@ class ConfigManager(private val plugin: Plugin) : Reloadable {
 
     fun getInt(path: String): Int = config.getInt(path, defaultConfig.getInt(path))
     fun getInt(path: String, @NotNull defaultValue: Int): Int = config.getInt(path, defaultValue)
+    fun getInt(configKey: ConfigKey): Int = config.getInt(configKey.key, configKey.defaultValue as Int)
 
     fun getBoolean(path: String): Boolean = config.getBoolean(path, defaultConfig.getBoolean(path))
     fun getBoolean(path: String, @NotNull defaultValue: Boolean): Boolean = config.getBoolean(path, defaultValue)

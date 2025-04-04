@@ -25,5 +25,10 @@ command:
     success: "Faction {faction} has been disbanded successfully!"
     error: "Failed to disband faction!"
   list:
-    header: "<yellow>Liste des factions"
-    empty: "Aucune faction trouvée!"
+    header: "<yellow>Faction List"
+    empty: "<red>No factions found!"
+    entry: "<yellow>{name} - {online} - {members} members"
+  members:
+    header: "<yellow>Faction Members"
+    empty: "<red>No members found!"
+    entry: "<yellow>{name} - {role} - {power}/{maxPower}"
